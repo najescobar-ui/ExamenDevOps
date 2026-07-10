@@ -1,0 +1,33 @@
+# Dependencias
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Entorno / secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Sistema / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Terraform / infra (por si aplica)
+*.tfstate
+*.tfstate.*
+.terraform/
