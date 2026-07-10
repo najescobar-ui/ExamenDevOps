@@ -4,6 +4,15 @@
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 require; discover_network; state_load
 
+log "Borrando auto scaling (targets, politicas y alarmas asociadas)..."
+# Al desregistrar el scalable target se eliminan tambien sus scaling policies
+# y las alarmas de CloudWatch que las respaldan.
+for svc in "${PROJECT}-ventas" "${PROJECT}-despachos" "${PROJECT}-frontend"; do
+  aws application-autoscaling deregister-scalable-target \
+    --service-namespace ecs --resource-id "service/${CLUSTER}/${svc}" \
+    --scalable-dimension ecs:service:DesiredCount >/dev/null 2>&1 || true
+done
+
 log "Borrando servicios ECS..."
 for svc in "${PROJECT}-ventas" "${PROJECT}-despachos" "${PROJECT}-frontend"; do
   aws ecs update-service --cluster "$CLUSTER" --service "$svc" --desired-count 0 >/dev/null 2>&1 || true
