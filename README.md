@@ -126,7 +126,6 @@ feature/*  →  dev  (integración)  →  main  (estable / producción)
 Todo cambio entra por una rama de trabajo y sube vía PR; nunca se commitea
 directo a `main`. La integración a `main` dispara el despliegue a producción.
 
-## Equipo
+## Autor
 
 - Najeeb Escobar Pérez
-- _(compañero/a de dupla)_
