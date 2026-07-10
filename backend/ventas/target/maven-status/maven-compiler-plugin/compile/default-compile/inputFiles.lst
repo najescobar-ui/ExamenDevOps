@@ -1,0 +1,11 @@
+/app/src/main/java/com/citt/SpringbootApiRestApplication.java
+/app/src/main/java/com/citt/config/CorsConfig.java
+/app/src/main/java/com/citt/config/OpenApiConfing.java
+/app/src/main/java/com/citt/controller/VentaController.java
+/app/src/main/java/com/citt/exceptions/RestResponseEntityExceptionHandler.java
+/app/src/main/java/com/citt/exceptions/VentaNotFoundException.java
+/app/src/main/java/com/citt/exceptions/dto/ErrorMessage.java
+/app/src/main/java/com/citt/persistence/entity/Venta.java
+/app/src/main/java/com/citt/persistence/repository/VentaRepository.java
+/app/src/main/java/com/citt/persistence/services/VentaService.java
+/app/src/main/java/com/citt/persistence/services/VentaServiceImpl.java
