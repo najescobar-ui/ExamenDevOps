@@ -88,6 +88,24 @@ Servicios disponibles:
 
 Para bajar todo: `docker compose down` (o `down -v` para borrar también los datos).
 
+## Acceso a la aplicación desplegada (AWS)
+
+Una vez aprovisionada la infraestructura, la aplicación queda pública detrás del
+ALB (no se usa `localhost`). El frontend y ambas APIs comparten el mismo dominio,
+enrutados por *path*:
+
+| Recurso | URL |
+| --- | --- |
+| Aplicación (frontend) | `http://<ALB_DNS>/` |
+| API Ventas | `http://<ALB_DNS>/api/v1/ventas` |
+| API Despachos | `http://<ALB_DNS>/api/v1/despachos` |
+
+El `<ALB_DNS>` se genera en cada aprovisionamiento (no es fijo). Se obtiene de:
+
+- la salida final de `infra/provision.sh`,
+- el archivo `infra/state.env` (variable `ALB_DNS`), o
+- `aws elbv2 describe-load-balancers --names exm-alb --query 'LoadBalancers[0].DNSName' --output text`.
+
 ## CI/CD
 
 Dos workflows en `.github/workflows/`:
