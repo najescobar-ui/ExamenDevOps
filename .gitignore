@@ -31,6 +31,7 @@ logs/
 .idea/
 .vscode/
 *.swp
+~$*
 
 # Terraform / infra (por si aplica)
 *.tfstate
