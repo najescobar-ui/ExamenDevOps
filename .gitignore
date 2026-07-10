@@ -18,6 +18,10 @@ target/
 *.pem
 *.key
 
+# Infra: estado generado y task-defs renderizados (se conservan solo las .tpl)
+infra/state.env
+infra/task-defs/*.json
+
 # Logs
 *.log
 logs/
