@@ -1,0 +1,74 @@
+name: Deploy to ECS
+
+# Despliega a produccion (ECS Fargate) al integrar en main. Tambien se puede
+# lanzar manualmente. Requiere los secrets AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# / AWS_SESSION_TOKEN (credenciales temporales del lab de AWS Academy).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECS_CLUSTER: exm-cluster
+
+jobs:
+  deploy:
+    name: Deploy ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { service: ventas,    context: backend/ventas }
+          - { service: despachos, context: backend/despachos }
+          - { service: frontend,  context: frontend }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          REPO="$REGISTRY/examen-devops/${{ matrix.service }}"
+          TAG="${GITHUB_SHA::7}"
+          # El runner es amd64, asi que el build es nativo para Fargade x86_64.
+          docker build -t "$REPO:$TAG" -t "$REPO:latest" "${{ matrix.context }}"
+          docker push "$REPO:$TAG"
+          docker push "$REPO:latest"
+          echo "IMAGE=$REPO:$TAG" >> "$GITHUB_ENV"
+
+      - name: Render new task definition
+        run: |
+          FAMILY="exm-${{ matrix.service }}"
+          aws ecs describe-task-definition --task-definition "$FAMILY" \
+            --query 'taskDefinition' --output json > td.json
+          jq --arg IMG "$IMAGE" \
+            '.containerDefinitions[0].image = $IMG
+             | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                   .compatibilities, .registeredAt, .registeredBy)' \
+            td.json > new-td.json
+
+      - name: Register and deploy
+        run: |
+          FAMILY="exm-${{ matrix.service }}"
+          NEW_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-td.json \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "Nueva revision: $NEW_ARN"
+          aws ecs update-service --cluster "$ECS_CLUSTER" --service "$FAMILY" \
+            --task-definition "$NEW_ARN" >/dev/null
+          echo "Esperando estabilidad del servicio $FAMILY..."
+          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$FAMILY"
+          echo "Servicio $FAMILY desplegado."
